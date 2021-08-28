@@ -1,0 +1,169 @@
+1. Вывести всех сотрудников с именем Robert 
+SELECT * 
+FROM Employees
+WHERE FirstName="Robert"
+
+2. Вывести номера заказов в диапазоне от 10253 до 10260 *
+SELECT OrderID
+FROM Orders
+WHERE OrderID BETWEEN 10253 AND 10260
+
+3. Вывести информацию о продуктах, название которых начинается с "Chef"
+SELECT * 
+FROM Products
+WHERE ProductName LIKE "%Chef%"
+
+4. Вывести наименования продуктов с кодами 1, 3, 7, 9 и ценой уменьшенной на 50%.
+SELECT ProductName, Price/2
+FROM [Products]
+WHERE ProductID IN (1, 3, 7, 9)
+
+5. Выбрать все заказы сотрудника с номером 5 или заказы клиента с кодом больше 88 и кодом перевозчика 1. 
+SELECT *
+FROM [Orders]
+WHERE ShipperID = "1" AND EmployeeID = "5"
+
+6. Выбрать все заказы сотрудника с номером 5 или заказы клиента с кодом больше 88 и кодом перевозчика 1. *
+SELECT * FROM [Orders]
+WHERE EmployeeID=5 OR CustomerID>88 AND ShipperID=1
+
+7. Вывести все продукты, у которых код продукта >= 64 или продукты, у которых поставщик Tokyo Traders.
+SELECT * FROM [Products]
+WHERE ProductID>="64"
+OR SupplierID=(SELECT SupplierID FROM [Suppliers]
+WHERE SupplierName="Tokyo Traders")
+
+8. Вывести закрепления сотрудника за заказами в виде: OrderID, LastName, FirstName
+SELECT OrderID, LastName, FirstName
+FROM Orders
+JOIN Employees
+ON Orders.EmployeeID = Employees.EmployeeID
+
+9. Вывести всю информацию о сотрудниках, у которых нет ни одного заказа
+SELECT *
+FROM Employees
+Left JOIN Orders
+ON Employees.EmployeeID = Orders.EmployeeID
+WHERE OrderID IS NULL
+
+10. Вывести отчёт в виде: номер заказа, количество товара в заказе, название товара
+SELECT OrderID, Quantity, ProductName
+FROM OrderDetails
+JOIN Products
+ON OrderDetails.ProductID = Products.ProductID
+
+11. У нас есть две таблицы: Shippers и Suppliers, необходимо сделать общий справочник состоящий из двух колонок
+SELECT 'Shipper' as TableName, ShipperName
+FROM Shippers
+UNION ALL
+SELECT 'Supplier' as TableName, SupplierName
+FROM Suppliers
+
+12. Выбрать все коды клиентов - CustomerID, сделавших заказ в 1996 году, но не сделавших в 1997 году.
+SELECT CustomerID
+FROM [Orders]
+WHERE OrderDate LIKE "%1996%"
+EXCEPT
+SELECT CustomerID
+FROM [Orders]
+WHERE OrderDate LIKE "%1997%"
+
+13. Выбрать все номера заказов и продукты в них, у которых количество больше 20 и название категории'Produce'
+SELECT OrderID, ProductName
+FROM OrderDetails
+JOIN Products
+ON OrderDetails.ProductID = Products.ProductID
+JOIN Categories
+ON Products.CategoryID = Categories.CategoryID
+WHERE quantity > 20 AND CategoryName = 'Produce'
+
+14. Найти максимальный номер заказа сотрудника Buchanan Steven
+SELECT MAX (OrderID) MaxOID
+FROM [Orders]
+JOIN Employees
+ON Orders.EmployeeID = Employees.EmployeeID
+WHERE LastName = 'Buchanan' AND FirstName = 'Steven'
+
+15. Вывести номера заказов и общую сумму по колонке Quantity. Оставить только те записи, в которых сумма больше 200
+SELECT OrderID, SUM(Quantity) SQ
+FROM OrderDetails
+GROUP BY OrderID
+HAVING SQ >200
+
+16. Вывести товары, цены которых больше средней цены по всем продуктам
+SELECT * 
+FROM Products
+WHERE Price > (SELECT AVG(Price) AP FROM Products)
+
+17. Вывести CategoryID и максимальную цену товара в каждой категории
+SELECT CategoryID, MAX(Price) MP
+FROM Products
+GROUP BY CategoryID
+
+18. Вывести EmployeeID и количество их заказов. Учесть, что у сотрудника может не быть заказов
+SELECT E.EmployeeID, COUNT(OrderID)
+FROM Employees as E
+LEFT JOIN Orders as O
+ON E.EmployeeID=O.EmployeeID
+GROUP BY E.EmployeeID
+
+19. Для каждого заказа посчитать его итоговую стоимость
+SELECT sum(price) sp 
+FROM products
+join orderdetails 
+on products.productid = orderdetails.productid
+group by orderid
+
+20. Для каждого ShipperID выбрать самый дорогой заказ по сумме
+SELECT ShipperID, SUM(Price) MP 
+FROM Orders
+JOIN OrderDetails
+ON Orders.OrderID=OrderDetails.OrderID
+JOIN Products
+ON Products.ProductID=OrderDetails.ProductID
+GROUP BY ShipperID
+
+21. Вывести поставщика (SupplierName), сумма чьих товаров самая дорогая
+SELECT SupplierName, sum(price)
+FROM Suppliers as s
+Join Products as p
+On s.SupplierID = p.SupplierID
+Group by SupplierName
+Having price = (SELECT Max(price)From Products)
+
+22. Добавить себя в таблицу сотрудников под c 11м EmployeeID
+INSERT INTO Employees (LastName, FirstName)
+VALUES ('Rennenkampf', 'Inna')
+
+23. Изменить колонку FirstName на значение "Yeah, its me" для сотрудника с номером 11
+UPDATE Employees 
+SET FirstName = 'Yeah, its me' 
+WHERE EmployeeID = '11'
+
+24. Для заказов с CustomerID = 90 изменить значение в колонке EmployeeID на 11
+UPDATE Orders
+SET EmployeeID = '11'
+WHERE CustomerID = '90'
+
+25. Для заказов с CustomerID = 89 изменить значение в колонке EmployeeID на 11
+UPDATE Orders
+SET EmployeeID = '11'
+WHERE CustomerID = '89'
+
+26. Посчитать сумму каждого из заказов сотрудника 11
+SELECT OrderID, sum (price*quantity)
+FROM Products
+JOIN OrderDetails
+ON Products.ProductID = OrderDetails.ProductID
+WHERE OrderID in (SELECT Orders.OrderID FROM Orders WHERE EmployeeID=11)
+GROUP BY OrderID
+
+27. Для товаров, у которых цена больше средней цены по всем продуктам, повысить цену еще на 10%. Проверить, что запрос 5 изменился по суммам.
+UPDATE Products
+SET Price=Price*1.1
+WHERE Price >(SELECT AVG (Price) FROM Products)
+
+28. Напишите перечень Ваших действий, если необходимо удалить запись "Federal Shipping"
+DELETE 
+FROM Shippers
+WHERE ShipperName ='Federal Shipping'
